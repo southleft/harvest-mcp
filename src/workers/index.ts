@@ -447,8 +447,21 @@ app.all('/mcp', async (c) => {
 
   // Create MCP server for this request
   const server = new McpServer({
-    name: 'harvest-mcp',
+    name: 'Harvest',
     version: '0.1.0',
+    description: 'Time tracking and project management via Harvest API',
+    icons: [
+      {
+        src: 'https://www.getharvest.com/hubfs/apple-touch-icon.png',
+        mimeType: 'image/png',
+        sizes: ['180x180'],
+      },
+      {
+        src: 'https://www.getharvest.com/hubfs/favicon.svg',
+        mimeType: 'image/svg+xml',
+        sizes: ['any'],
+      },
+    ],
   });
 
   // Register all Harvest tools with the current session
