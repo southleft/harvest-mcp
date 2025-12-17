@@ -55,7 +55,7 @@ app.get('/', (c) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Harvest MCP Server - AI-Powered Time Tracking</title>
+        <title>Harvest MCP Server</title>
         <link rel="icon" type="image/png" href="/icon.png">
         <link rel="shortcut icon" href="/favicon.ico">
         <link rel="apple-touch-icon" href="/icon.png">
@@ -66,329 +66,149 @@ app.get('/', (c) => {
             color: #1a1a1a;
             line-height: 1.6;
             background: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+          }
+          a { color: #fa5d00; }
+          a:hover { color: #e55400; }
+          code {
+            background: #f5f5f5;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 14px;
+          }
+          .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 48px 24px;
+            flex: 1;
           }
           .header {
-            background: #fff;
-            border-bottom: 1px solid #eee;
-            padding: 16px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-          }
-          .logo {
             display: flex;
             align-items: center;
             gap: 12px;
-            text-decoration: none;
-            color: #1a1a1a;
+            margin-bottom: 32px;
           }
-          .logo img { width: 32px; height: 32px; }
-          .logo-text {
-            font-size: 20px;
-            font-weight: 600;
-            color: #fa5d00;
-          }
-          .logo-text span { color: #666; font-weight: 400; }
-          .github-link {
-            color: #666;
-            text-decoration: none;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-          }
-          .github-link:hover { color: #fa5d00; }
-          .hero {
-            background: linear-gradient(135deg, #fff9f5 0%, #fff 100%);
-            padding: 80px 24px;
-            text-align: center;
-          }
-          .hero h1 {
-            font-size: 48px;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 16px;
-          }
-          .hero h1 span { color: #fa5d00; }
-          .hero p {
-            font-size: 20px;
-            color: #666;
-            max-width: 600px;
-            margin: 0 auto 32px;
-          }
-          .cta-button {
-            display: inline-block;
-            background: #fa5d00;
-            color: #fff;
-            padding: 14px 32px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            transition: background 0.2s;
-          }
-          .cta-button:hover { background: #e55400; }
-          .connect-url {
-            margin-top: 24px;
-            font-size: 14px;
-            color: #666;
-          }
-          .connect-url code {
-            background: #f5f5f5;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-family: 'SF Mono', Monaco, monospace;
-            color: #1a1a1a;
-            display: inline-block;
-            margin-top: 8px;
-          }
-          .features {
-            padding: 80px 24px;
-            max-width: 1100px;
-            margin: 0 auto;
-          }
-          .features h2 {
-            text-align: center;
-            font-size: 32px;
-            margin-bottom: 48px;
-            color: #1a1a1a;
-          }
-          .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 32px;
-          }
-          .feature-card {
-            background: #fff;
-            border: 1px solid #eee;
-            border-radius: 12px;
-            padding: 32px;
-            transition: box-shadow 0.2s;
-          }
-          .feature-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-          .feature-icon {
-            width: 48px;
-            height: 48px;
-            background: #fff5f0;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
+          .header img { width: 40px; height: 40px; }
+          .header h1 {
             font-size: 24px;
+            font-weight: 600;
+            color: #fa5d00;
           }
-          .feature-card h3 { font-size: 18px; margin-bottom: 8px; color: #1a1a1a; }
-          .feature-card p { color: #666; font-size: 15px; }
-          .tools-section {
+          .header h1 span { color: #666; font-weight: 400; }
+          .intro {
+            margin-bottom: 32px;
+            color: #444;
+          }
+          .section {
+            margin-bottom: 32px;
+          }
+          .section h2 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #999;
+            margin-bottom: 12px;
+          }
+          .endpoint {
             background: #fafafa;
-            padding: 80px 24px;
-          }
-          .tools-section h2 {
-            text-align: center;
-            font-size: 32px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 16px;
             margin-bottom: 16px;
           }
-          .tools-section > p {
-            text-align: center;
-            color: #666;
-            margin-bottom: 48px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-          }
-          .tools-grid {
-            max-width: 900px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-          }
-          .tool-item {
+          .endpoint code {
+            display: block;
             background: #fff;
-            padding: 16px 20px;
-            border-radius: 8px;
-            border: 1px solid #eee;
-            font-size: 14px;
+            border: 1px solid #e5e5e5;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 15px;
+            color: #1a1a1a;
+            user-select: all;
           }
-          .tool-item strong {
+          .steps {
+            list-style: none;
+          }
+          .steps li {
+            padding: 8px 0;
+            padding-left: 28px;
+            position: relative;
+            color: #444;
+          }
+          .steps li::before {
+            content: attr(data-step);
+            position: absolute;
+            left: 0;
             color: #fa5d00;
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 13px;
-          }
-          .tool-item span { color: #666; display: block; margin-top: 4px; }
-          .setup-section {
-            padding: 80px 24px;
-            max-width: 800px;
-            margin: 0 auto;
-          }
-          .setup-section h2 {
-            text-align: center;
-            font-size: 32px;
-            margin-bottom: 48px;
-          }
-          .setup-steps { display: flex; flex-direction: column; gap: 24px; }
-          .setup-step { display: flex; gap: 20px; align-items: flex-start; }
-          .step-number {
-            width: 36px;
-            height: 36px;
-            background: #fa5d00;
-            color: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-weight: 600;
-            flex-shrink: 0;
           }
-          .step-content h3 { font-size: 18px; margin-bottom: 4px; }
-          .step-content p { color: #666; font-size: 15px; }
-          .step-content code {
-            background: #f5f5f5;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 13px;
-          }
-          .footer {
-            background: #1a1a1a;
-            color: #999;
-            padding: 40px 24px;
-            text-align: center;
-            font-size: 14px;
-          }
-          .footer a { color: #fa5d00; text-decoration: none; }
-          .footer a:hover { text-decoration: underline; }
-          .footer-links {
-            margin-top: 16px;
+          .links {
             display: flex;
-            justify-content: center;
             gap: 24px;
             flex-wrap: wrap;
           }
-          @media (max-width: 600px) {
-            .hero h1 { font-size: 32px; }
-            .hero p { font-size: 16px; }
-            .features h2, .tools-section h2, .setup-section h2 { font-size: 24px; }
+          .links a {
+            text-decoration: none;
+            font-weight: 500;
           }
+          .links a:hover {
+            text-decoration: underline;
+          }
+          .footer {
+            text-align: center;
+            padding: 24px;
+            color: #999;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+          }
+          .footer a { text-decoration: none; }
         </style>
       </head>
       <body>
-        <header class="header">
-          <a href="/" class="logo">
+        <div class="container">
+          <div class="header">
             <img src="/icon.png" alt="Harvest">
-            <div class="logo-text">harvest <span>MCP</span></div>
-          </a>
-          <a href="https://github.com/southleft/harvest-mcp" class="github-link" target="_blank">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-            GitHub
-          </a>
-        </header>
-
-        <section class="hero">
-          <h1>Turn <span>hours</span> into insights</h1>
-          <p>Connect your AI assistant to Harvest and let it help you track time, analyze profitability, and manage projects with natural language.</p>
-          <a href="https://github.com/southleft/harvest-mcp#quick-start" class="cta-button">Get Started</a>
-          <div class="connect-url">
-            Connect with Claude Desktop using:
-            <br>
-            <code>https://harvest-mcp.southleft.com/mcp</code>
+            <h1>Harvest <span>MCP Server</span></h1>
           </div>
-        </section>
 
-        <section class="features">
-          <h2>What you can do</h2>
-          <div class="feature-grid">
-            <div class="feature-card">
-              <div class="feature-icon">&#9201;</div>
-              <h3>Track Time Naturally</h3>
-              <p>Create, view, and manage time entries using conversational commands. Start timers, log hours, and keep your timesheets up to date.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">&#128200;</div>
-              <h3>Gain Powerful Insights</h3>
-              <p>Calculate profitability, utilization rates, and aggregate time data across clients, projects, and team members.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">&#128269;</div>
-              <h3>Smart Entity Search</h3>
-              <p>Find clients, projects, users, and tasks with fuzzy search. No need to remember exact names or IDs.</p>
+          <p class="intro">
+            A <a href="https://modelcontextprotocol.io/" target="_blank">Model Context Protocol</a> server
+            that connects AI assistants to the <a href="https://www.getharvest.com/" target="_blank">Harvest</a>
+            time tracking API.
+          </p>
+
+          <div class="section">
+            <h2>MCP Endpoint</h2>
+            <div class="endpoint">
+              <code>https://harvest-mcp.southleft.com/mcp</code>
             </div>
           </div>
-        </section>
 
-        <section class="tools-section">
-          <h2>19 tools at your fingertips</h2>
-          <p>Everything you need to interact with Harvest through your AI assistant.</p>
-          <div class="tools-grid">
-            <div class="tool-item">
-              <strong>harvest_list_time_entries</strong>
-              <span>Filter time by user, client, project, dates</span>
-            </div>
-            <div class="tool-item">
-              <strong>harvest_create_time_entry</strong>
-              <span>Log time with optional running timer</span>
-            </div>
-            <div class="tool-item">
-              <strong>harvest_compute_profitability</strong>
-              <span>Calculate margins &amp; profitability</span>
-            </div>
-            <div class="tool-item">
-              <strong>harvest_compute_utilization</strong>
-              <span>Track capacity &amp; utilization rates</span>
-            </div>
-            <div class="tool-item">
-              <strong>harvest_aggregate_time</strong>
-              <span>Group time by client, project, week</span>
-            </div>
-            <div class="tool-item">
-              <strong>harvest_resolve_entities</strong>
-              <span>Fuzzy search for any Harvest entity</span>
-            </div>
-            <div class="tool-item">
-              <strong>harvest_list_projects</strong>
-              <span>View all projects with filters</span>
-            </div>
-            <div class="tool-item">
-              <strong>harvest_list_invoices</strong>
-              <span>Access invoice data &amp; status</span>
+          <div class="section">
+            <h2>Quick Setup</h2>
+            <ol class="steps">
+              <li data-step="1.">In Claude Desktop, go to <strong>Settings → Connectors → Add Connector</strong></li>
+              <li data-step="2.">Paste the endpoint URL above and click <strong>Connect</strong></li>
+              <li data-step="3.">Authorize with your Harvest account via OAuth</li>
+            </ol>
+          </div>
+
+          <div class="section">
+            <h2>Links</h2>
+            <div class="links">
+              <a href="https://github.com/southleft/harvest-mcp" target="_blank">GitHub Repository</a>
+              <a href="https://github.com/southleft/harvest-mcp#available-tools-19" target="_blank">Available Tools</a>
+              <a href="https://github.com/southleft/harvest-mcp#example-prompts" target="_blank">Example Prompts</a>
             </div>
           </div>
-        </section>
-
-        <section class="setup-section">
-          <h2>Get started in minutes</h2>
-          <div class="setup-steps">
-            <div class="setup-step">
-              <div class="step-number">1</div>
-              <div class="step-content">
-                <h3>Add the connector</h3>
-                <p>In Claude Desktop, go to Settings &#8594; Connectors &#8594; Add Connector and enter <code>https://harvest-mcp.southleft.com/mcp</code></p>
-              </div>
-            </div>
-            <div class="setup-step">
-              <div class="step-number">2</div>
-              <div class="step-content">
-                <h3>Connect your Harvest account</h3>
-                <p>Click Connect and authorize access to your Harvest account via OAuth.</p>
-              </div>
-            </div>
-            <div class="setup-step">
-              <div class="step-number">3</div>
-              <div class="step-content">
-                <h3>Start asking questions</h3>
-                <p>Ask Claude things like "What did I work on last week?" or "How profitable is Project X?"</p>
-              </div>
-            </div>
-          </div>
-        </section>
+        </div>
 
         <footer class="footer">
-          <p>Harvest MCP Server v0.1.0 &middot; Built by <a href="https://southleft.com" target="_blank">Southleft</a></p>
-          <div class="footer-links">
-            <a href="https://github.com/southleft/harvest-mcp">Documentation</a>
-            <a href="https://github.com/southleft/harvest-mcp/issues">Report an Issue</a>
-            <a href="https://www.getharvest.com" target="_blank">Harvest</a>
-          </div>
+          Made with &#10084;&#65039; by <a href="https://southleft.com" target="_blank">Southleft</a>
         </footer>
       </body>
     </html>
