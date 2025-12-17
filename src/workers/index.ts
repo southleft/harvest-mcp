@@ -104,6 +104,38 @@ app.get('/health', (c) => {
 });
 
 /**
+ * Harvest logo icon - served from same origin for MCP icon requirements
+ * Base64-encoded PNG of Harvest's apple-touch-icon (180x180)
+ */
+const HARVEST_ICON_PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAMAAABlApw1AAAAPFBMVEX6XQD/+PH/7uL/5dP+28T+28P+0bX+x6b9vpb9tYf9tIj9qnj8oGn8l1r7l1r8jkv8hDz7ei37cB77Zw+k35VPAAABoUlEQVR42u3cTW4CMQxAYXtChxRnmJDc/65dRPy0REhIiYTV95Ze2PouYCEiIiIiIiIiIiIiIiIi+tiyxVaSezWdYivLu9XYehydr+s2Gdwe9Np6v3fSW+9fLNqSW7botShjM9VnQAk6FBBVZwE27QGiDgWYzgOEHmDXoYCi8wC79gDHsQCbCLAu4DAWsE4ExC5AAQAAAAAAAAAAAAAAAAAAAAAA/AFqOh48A9KiLacAU3UN2NQ5IDgHXNQ5YPcOOAMAAAAAgNeAkrtVH4Bqi/bLLgAlqHoGlKC+AVF9A6o6B+zeAck7wAAAAAAAAAAAAAAAAACg0yLOAdE5IBTfgFDENWAt4gkQ7HfnKuIKsMrfAAAAAADAS8DuHVCcA1ZxDrg4B5i4BiybOAZ8xVTFM6CICAAAAAAAAAAAAAAAAAAAAADgHwIW74BDF2ATAWksIHYBeSKgjAWUHiDIPIDJUMC39AD7PECUoYC19gAmswBLkpGAxUSeASHL4LbYOp3rI6tV5bG9DU1elLvrUmxZ5j0wEREREREREREREREREX1sP/+vQJawQ0UbAAAAAElFTkSuQmCC';
+
+/**
+ * Icon endpoint - serves Harvest logo PNG from same origin
+ */
+app.get('/icon.png', (c) => {
+  const iconBuffer = Uint8Array.from(atob(HARVEST_ICON_PNG_BASE64), c => c.charCodeAt(0));
+  return new Response(iconBuffer, {
+    headers: {
+      'Content-Type': 'image/png',
+      'Cache-Control': 'public, max-age=86400',
+    },
+  });
+});
+
+/**
+ * Favicon endpoint - serves Harvest logo as favicon
+ */
+app.get('/favicon.ico', (c) => {
+  const iconBuffer = Uint8Array.from(atob(HARVEST_ICON_PNG_BASE64), c => c.charCodeAt(0));
+  return new Response(iconBuffer, {
+    headers: {
+      'Content-Type': 'image/png',
+      'Cache-Control': 'public, max-age=86400',
+    },
+  });
+});
+
+/**
  * Helper to get base URL from request
  */
 function getBaseUrl(request: Request): string {
@@ -446,20 +478,16 @@ app.all('/mcp', async (c) => {
   });
 
   // Create MCP server for this request
+  // Icons must be from same origin per MCP security requirements
   const server = new McpServer({
     name: 'Harvest',
     version: '0.1.0',
     description: 'Time tracking and project management via Harvest API',
     icons: [
       {
-        src: 'https://www.getharvest.com/hubfs/apple-touch-icon.png',
+        src: `${baseUrl}/icon.png`,
         mimeType: 'image/png',
         sizes: ['180x180'],
-      },
-      {
-        src: 'https://www.getharvest.com/hubfs/favicon.svg',
-        mimeType: 'image/svg+xml',
-        sizes: ['any'],
       },
     ],
   });
