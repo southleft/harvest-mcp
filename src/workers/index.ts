@@ -35,11 +35,12 @@ app.use('*', cors({
     if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
       return origin;
     }
-    return null;
+    // Allow any origin for OAuth discovery (needed for Claude Desktop connectors)
+    return origin;
   },
   allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'mcp-session-id', 'x-harvest-session', 'Authorization', 'Last-Event-ID', 'mcp-protocol-version'],
-  exposeHeaders: ['mcp-session-id', 'x-harvest-session', 'mcp-protocol-version'],
+  exposeHeaders: ['mcp-session-id', 'x-harvest-session', 'mcp-protocol-version', 'WWW-Authenticate'],
   credentials: true,
   maxAge: 86400,
 }));
@@ -412,9 +413,11 @@ app.all('/mcp', async (c) => {
   }
 
   // If no valid session with tokens, return 401 with OAuth metadata
-  // This tells Claude Desktop to initiate the OAuth flow
+  // This tells Claude Desktop to initiate the OAuth flow per MCP Authorization spec
   if (!session || !session.harvestAccessToken) {
-    // Return 401 with WWW-Authenticate header pointing to our OAuth metadata
+    // Return 401 with WWW-Authenticate header pointing to protected resource metadata (RFC 9728)
+    // Format: Bearer resource_metadata="<url>"
+    const resourceMetadataUrl = `${baseUrl}/.well-known/oauth-protected-resource`;
     return new Response(JSON.stringify({
       jsonrpc: '2.0',
       error: {
@@ -426,7 +429,8 @@ app.all('/mcp', async (c) => {
       status: 401,
       headers: {
         'Content-Type': 'application/json',
-        'WWW-Authenticate': `Bearer resource="${baseUrl}/.well-known/oauth-protected-resource"`,
+        'WWW-Authenticate': `Bearer resource_metadata="${resourceMetadataUrl}"`,
+        'Access-Control-Expose-Headers': 'WWW-Authenticate',
       },
     });
   }
