@@ -1,0 +1,13 @@
+{
+  "user_overrides": {
+    "12345": { "cost_rate": 75.00 },
+    "67890": { "cost_rate": 50.00 }
+  },
+  "project_overrides": {
+    "11111": { "hourly_rate": 150.00 }
+  },
+  "defaults": {
+    "cost_rate": 0,
+    "billable_rate": null
+  }
+}

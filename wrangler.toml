@@ -1,0 +1,53 @@
+# Harvest MCP Server - Cloudflare Workers Configuration
+name = "harvest-mcp"
+account_id = "4718d49e576512c578ff94c6b1ba7d3f"
+main = "src/workers/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Enable workers.dev subdomain
+workers_dev = true
+preview_urls = true
+
+# Workers Paid features
+# CPU time limit: 30 seconds (vs 10ms free tier)
+# Memory: 128MB
+
+# Build is handled by wrangler's esbuild bundler
+# No build command needed - wrangler builds from src directly
+
+# KV Namespaces for session and rate configuration storage
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "35b9b627e0864a5c8ddd3b2e6c350237"
+
+[[kv_namespaces]]
+binding = "RATES_CONFIG"
+id = "70ed4392a08544faac106f6e168fe176"
+
+# Environment variables (non-secret)
+[vars]
+ENVIRONMENT = "production"
+LOG_LEVEL = "info"
+SESSION_TTL_HOURS = "24"
+ALLOWED_ORIGINS = "https://claude.ai,https://app.claude.ai"
+
+# Secrets (set via `wrangler secret put`)
+# - HARVEST_CLIENT_ID
+# - HARVEST_CLIENT_SECRET
+# - SESSION_SECRET
+
+# Development environment
+[env.dev]
+name = "harvest-mcp-dev"
+vars = { ENVIRONMENT = "development", LOG_LEVEL = "debug" }
+
+# Preview/Staging environment
+[env.staging]
+name = "harvest-mcp-staging"
+vars = { ENVIRONMENT = "staging", LOG_LEVEL = "info" }
+
+# Production routes (optional - configure custom domain)
+# [[routes]]
+# pattern = "mcp.yourdomain.com/*"
+# zone_name = "yourdomain.com"
