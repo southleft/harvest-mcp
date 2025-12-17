@@ -103,6 +103,212 @@ app.get('/health', (c) => {
 });
 
 /**
+ * Helper to get base URL from request
+ */
+function getBaseUrl(request: Request): string {
+  const url = new URL(request.url);
+  return `${url.protocol}//${url.host}`;
+}
+
+/**
+ * OAuth Protected Resource Metadata (RFC 9728)
+ * Claude Desktop fetches this to discover the authorization server
+ */
+app.get('/.well-known/oauth-protected-resource', (c) => {
+  const baseUrl = getBaseUrl(c.req.raw);
+
+  return c.json({
+    resource: `${baseUrl}/mcp`,
+    authorization_servers: [baseUrl],
+    bearer_methods_supported: ['header'],
+    resource_documentation: 'https://github.com/southleft/harvest-mcp',
+  });
+});
+
+/**
+ * OAuth Authorization Server Metadata (RFC 8414)
+ * Claude Desktop fetches this to get OAuth endpoints
+ */
+app.get('/.well-known/oauth-authorization-server', (c) => {
+  const baseUrl = getBaseUrl(c.req.raw);
+
+  return c.json({
+    issuer: baseUrl,
+    authorization_endpoint: `${baseUrl}/authorize`,
+    token_endpoint: `${baseUrl}/token`,
+    registration_endpoint: `${baseUrl}/register`,
+    response_types_supported: ['code'],
+    grant_types_supported: ['authorization_code', 'refresh_token'],
+    token_endpoint_auth_methods_supported: ['none', 'client_secret_post'],
+    code_challenge_methods_supported: ['S256'],
+    service_documentation: 'https://github.com/southleft/harvest-mcp',
+  });
+});
+
+/**
+ * Dynamic Client Registration (RFC 7591)
+ * For clients that need to register dynamically
+ */
+app.post('/register', async (c) => {
+  // For simplicity, we accept any registration and return a client_id
+  // In production, you might want to validate and store these
+  const body = await c.req.json().catch(() => ({}));
+  const clientId = `mcp-client-${crypto.randomUUID()}`;
+
+  return c.json({
+    client_id: clientId,
+    client_name: body.client_name || 'MCP Client',
+    redirect_uris: body.redirect_uris || [],
+    grant_types: ['authorization_code', 'refresh_token'],
+    response_types: ['code'],
+    token_endpoint_auth_method: 'none',
+  }, 201);
+});
+
+/**
+ * OAuth Authorization Endpoint
+ * Redirects to Harvest OAuth, storing the client's callback for later
+ */
+app.get('/authorize', async (c) => {
+  const env = c.env;
+  const config = loadWorkersConfig(env, c.req.raw);
+  const sessionStore = new KVSessionStore(env.SESSIONS, config.security.sessionTtlHours);
+
+  const {
+    client_id,
+    redirect_uri,
+    response_type,
+    state,
+    code_challenge,
+    code_challenge_method,
+  } = c.req.query();
+
+  // Validate required params
+  if (response_type !== 'code') {
+    return c.json({ error: 'unsupported_response_type' }, 400);
+  }
+
+  if (!redirect_uri) {
+    return c.json({ error: 'invalid_request', error_description: 'redirect_uri required' }, 400);
+  }
+
+  // Create a session to track this OAuth flow
+  const sessionId = crypto.randomUUID();
+  const authSession: Session = {
+    id: sessionId,
+    harvestAccessToken: '',
+    harvestRefreshToken: '',
+    harvestAccountId: '',
+    tokenExpiresAt: new Date(0),
+    userId: 0,
+    userEmail: '',
+    createdAt: new Date(),
+    lastAccessedAt: new Date(),
+    // Store client's OAuth params for the callback
+    pendingOAuthState: JSON.stringify({
+      clientRedirectUri: redirect_uri,
+      clientState: state,
+      clientId: client_id,
+      codeChallenge: code_challenge,
+      codeChallengeMethod: code_challenge_method,
+    }),
+  };
+
+  await sessionStore.set(sessionId, authSession);
+
+  // Generate state for Harvest OAuth that encodes our session
+  const harvestState = HarvestOAuth.generateState(sessionId);
+
+  // Redirect to Harvest OAuth
+  const oauth = new HarvestOAuth(config.harvest);
+  const harvestAuthUrl = oauth.getAuthorizationUrl(harvestState);
+
+  return c.redirect(harvestAuthUrl);
+});
+
+/**
+ * OAuth Token Endpoint
+ * Exchanges authorization codes for access tokens
+ */
+app.post('/token', async (c) => {
+  const env = c.env;
+  const config = loadWorkersConfig(env, c.req.raw);
+  const sessionStore = new KVSessionStore(env.SESSIONS, config.security.sessionTtlHours);
+
+  // Parse form data
+  const contentType = c.req.header('content-type') || '';
+  let params: Record<string, string> = {};
+
+  if (contentType.includes('application/x-www-form-urlencoded')) {
+    const text = await c.req.text();
+    params = Object.fromEntries(new URLSearchParams(text));
+  } else if (contentType.includes('application/json')) {
+    params = await c.req.json();
+  }
+
+  const { grant_type, code, refresh_token, code_verifier } = params;
+
+  if (grant_type === 'authorization_code') {
+    if (!code) {
+      return c.json({ error: 'invalid_request', error_description: 'code required' }, 400);
+    }
+
+    // The code IS the session ID (we set it that way in callback)
+    const session = await sessionStore.get(code);
+    if (!session || !session.harvestAccessToken) {
+      return c.json({ error: 'invalid_grant', error_description: 'Invalid or expired code' }, 400);
+    }
+
+    // TODO: Verify code_verifier against stored code_challenge if PKCE was used
+
+    // Generate an access token (the session ID serves as our token)
+    const accessToken = session.id;
+
+    // Return tokens
+    return c.json({
+      access_token: accessToken,
+      token_type: 'Bearer',
+      expires_in: config.security.sessionTtlHours * 3600,
+      refresh_token: session.harvestRefreshToken ? session.id : undefined,
+    });
+  } else if (grant_type === 'refresh_token') {
+    if (!refresh_token) {
+      return c.json({ error: 'invalid_request', error_description: 'refresh_token required' }, 400);
+    }
+
+    // The refresh token IS the session ID
+    const session = await sessionStore.get(refresh_token);
+    if (!session || !session.harvestRefreshToken) {
+      return c.json({ error: 'invalid_grant', error_description: 'Invalid refresh token' }, 400);
+    }
+
+    // Refresh the Harvest token
+    try {
+      const oauth = new HarvestOAuth(config.harvest);
+      const tokens = await oauth.refreshToken(session.harvestRefreshToken);
+
+      // Update session
+      session.harvestAccessToken = tokens.access_token;
+      session.harvestRefreshToken = tokens.refresh_token;
+      session.tokenExpiresAt = new Date(Date.now() + tokens.expires_in * 1000);
+      await sessionStore.set(session.id, session);
+
+      return c.json({
+        access_token: session.id,
+        token_type: 'Bearer',
+        expires_in: config.security.sessionTtlHours * 3600,
+        refresh_token: session.id,
+      });
+    } catch (err) {
+      console.error('Token refresh error:', err);
+      return c.json({ error: 'invalid_grant', error_description: 'Failed to refresh token' }, 400);
+    }
+  }
+
+  return c.json({ error: 'unsupported_grant_type' }, 400);
+});
+
+/**
  * Create a session object - either from KV or a new empty one
  */
 async function getOrCreateSession(
@@ -176,18 +382,54 @@ async function parseMethod(request: Request): Promise<{ method: string; body: st
 /**
  * MCP Endpoint - handles all MCP protocol requests
  * Uses stateless mode with auto-initialization for returning sessions
+ * Supports OAuth Bearer token authentication for Claude Desktop Connectors
  */
 app.all('/mcp', async (c) => {
   const env = c.env;
   const request = c.req.raw;
   const config = loadWorkersConfig(env, request);
   const sessionStore = new KVSessionStore(env.SESSIONS, config.security.sessionTtlHours);
+  const baseUrl = getBaseUrl(request);
 
-  // Get harvest session ID from custom header (separate from MCP session)
-  const harvestSessionId = c.req.header('x-harvest-session') || c.req.header('mcp-session-id');
+  // Check for Authorization: Bearer token (OAuth flow from Claude Desktop)
+  const authHeader = c.req.header('Authorization');
+  let sessionId: string | undefined;
 
-  // Get or create session for OAuth token management
-  const session = await getOrCreateSession(sessionStore, harvestSessionId);
+  if (authHeader?.startsWith('Bearer ')) {
+    sessionId = authHeader.slice(7); // Extract token after "Bearer "
+  } else {
+    // Fallback to legacy headers
+    sessionId = c.req.header('x-harvest-session') || c.req.header('mcp-session-id');
+  }
+
+  // If we have a session ID, try to load it
+  let session: Session | null = null;
+  if (sessionId) {
+    session = await sessionStore.get(sessionId);
+    if (session) {
+      await sessionStore.touch(sessionId);
+    }
+  }
+
+  // If no valid session with tokens, return 401 with OAuth metadata
+  // This tells Claude Desktop to initiate the OAuth flow
+  if (!session || !session.harvestAccessToken) {
+    // Return 401 with WWW-Authenticate header pointing to our OAuth metadata
+    return new Response(JSON.stringify({
+      jsonrpc: '2.0',
+      error: {
+        code: -32001,
+        message: 'Authorization required. Please authenticate with Harvest.',
+      },
+      id: null,
+    }), {
+      status: 401,
+      headers: {
+        'Content-Type': 'application/json',
+        'WWW-Authenticate': `Bearer resource="${baseUrl}/.well-known/oauth-protected-resource"`,
+      },
+    });
+  }
 
   // Parse the incoming request to determine the method
   const parsed = await parseMethod(request.clone());
@@ -246,6 +488,8 @@ app.all('/mcp', async (c) => {
 
 /**
  * OAuth Callback - handles Harvest OAuth redirect
+ * If this was initiated via /authorize, redirects back to client's redirect_uri
+ * Otherwise shows a success page (for legacy in-chat auth flow)
  */
 app.get('/callback', async (c) => {
   const env = c.env;
@@ -295,13 +539,32 @@ app.get('/callback', async (c) => {
     session.tokenExpiresAt = new Date(Date.now() + tokens.expires_in * 1000);
     session.userId = accountsResponse.user.id;
     session.userEmail = accountsResponse.user.email;
-    session.pendingOAuthState = undefined;
 
+    // Parse the pending OAuth state to see if we need to redirect to client
+    const pendingOAuth = session.pendingOAuthState
+      ? JSON.parse(session.pendingOAuthState)
+      : null;
+
+    // Clear the pending state
+    session.pendingOAuthState = undefined;
     await sessionStore.set(session.id, session);
 
     console.log(`OAuth completed for session ${session.id}, user: ${session.userEmail}`);
 
-    // Show success page with session ID for the user to copy
+    // If this was initiated via /authorize, redirect back to the client
+    if (pendingOAuth?.clientRedirectUri) {
+      const redirectUrl = new URL(pendingOAuth.clientRedirectUri);
+      // Use the session ID as the authorization code
+      redirectUrl.searchParams.set('code', session.id);
+      if (pendingOAuth.clientState) {
+        redirectUrl.searchParams.set('state', pendingOAuth.clientState);
+      }
+
+      console.log(`Redirecting to client: ${redirectUrl.toString()}`);
+      return c.redirect(redirectUrl.toString());
+    }
+
+    // Legacy flow: show success page with session ID for manual copy
     return c.html(`
       <!DOCTYPE html>
       <html>
