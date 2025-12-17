@@ -34,7 +34,23 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that p
 
 ## Quick Start
 
-### Using with Claude Desktop
+### Option 1: Claude Desktop Connectors (Recommended)
+
+The easiest way to add this MCP server:
+
+1. Open Claude Desktop
+2. Go to **Settings** → **Connectors**
+3. Click **Add Connector**
+4. Enter the URL: `https://harvest-mcp.southleft-llc.workers.dev/mcp`
+5. Click **Connect**
+
+### Option 2: Claude Code CLI
+
+```bash
+claude mcp add --transport http harvest https://harvest-mcp.southleft-llc.workers.dev/mcp
+```
+
+### Option 3: Manual Config File
 
 Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
@@ -49,7 +65,7 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 }
 ```
 
-Restart Claude Desktop, then ask it to help you track time in Harvest!
+Restart Claude Desktop after editing the config file.
 
 ### Authentication
 
