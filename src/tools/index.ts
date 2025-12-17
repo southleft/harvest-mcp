@@ -403,7 +403,7 @@ export function registerTools(
 
   server.tool(
     'harvest_list_clients',
-    'List all clients',
+    'List all clients. Note: Client contacts (people) are available via harvest_list_contacts tool.',
     {
       is_active: z.boolean().optional().describe('Filter by active status'),
       page: z.number().optional().describe('Page number'),
@@ -443,6 +443,66 @@ export function registerTools(
         const clients = await client.listClients(filterParams);
         return {
           content: [{ type: 'text', text: JSON.stringify(clients, null, 2) }],
+        };
+      } catch (error) {
+        if (error instanceof HarvestApiError) {
+          return {
+            content: [{ type: 'text', text: `Harvest API error: ${error.message}` }],
+            isError: true,
+          };
+        }
+        throw error;
+      }
+    }
+  );
+
+  // ============================================
+  // CLIENT CONTACT TOOLS
+  // ============================================
+
+  server.tool(
+    'harvest_list_contacts',
+    'List client contacts (people associated with clients). Filter by client_id to get contacts for a specific client. Returns contact details including name, title, email, and phone numbers.',
+    {
+      client_id: z.number().optional().describe('Filter contacts by client ID (highly recommended)'),
+      updated_since: z.string().optional().describe('Only return contacts updated since this date (ISO 8601)'),
+      page: z.number().optional().describe('Page number'),
+      per_page: z.number().optional().describe('Results per page (1-2000)'),
+      auto_paginate: z.boolean().optional().describe('Automatically fetch all pages (max 10 pages)'),
+    },
+    async (params) => {
+      const client = await getHarvestClient(session, sessionStore, config);
+
+      if (!client) {
+        const authUrl = getAuthUrl(session, config);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Authentication required. Please authorize the application:\n\n${authUrl}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      try {
+        const { auto_paginate, ...filterParams } = params;
+
+        if (auto_paginate) {
+          const result = await client.autoPaginate(
+            (p) => client.listContacts({ ...filterParams, ...p }),
+            filterParams,
+            { maxPages: 10, perPage: params.per_page || 100 }
+          );
+          return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          };
+        }
+
+        const contacts = await client.listContacts(filterParams);
+        return {
+          content: [{ type: 'text', text: JSON.stringify(contacts, null, 2) }],
         };
       } catch (error) {
         if (error instanceof HarvestApiError) {

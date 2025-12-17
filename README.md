@@ -1,58 +1,31 @@
 # Harvest MCP Server
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that provides AI assistants with access to the [Harvest](https://www.getharvest.com/) time tracking API.
+Connect your AI assistant to [Harvest](https://www.getharvest.com/) time tracking. Query time entries, analyze profitability, track utilization, and manage your Harvest data through natural language.
 
 **Live Server:** https://harvest-mcp.southleft.com
 
-## Features
-
-### Time Tracking
-- **harvest_list_time_entries** - List and filter time entries by user, client, project, date range
-- **harvest_get_time_entry** - Get a specific time entry by ID
-- **harvest_create_time_entry** - Create new time entries with optional timer
-- **harvest_stop_timer** - Stop a running timer
-
-### Data Access
-- **harvest_get_company** - Get authenticated company/account info
-- **harvest_get_current_user** - Get current user info
-- **harvest_list_users** - List all users with filters
-- **harvest_list_clients** - List all clients
-- **harvest_list_projects** - List all projects
-- **harvest_list_tasks** - List all tasks
-- **harvest_list_invoices** - List invoices with filters
-- **harvest_list_expenses** - List expenses with filters
-
-### Analytics & Metrics
-- **harvest_compute_profitability** - Calculate profitability (time-based, invoice-based, or hybrid modes)
-- **harvest_compute_utilization** - Calculate utilization metrics with capacity tracking
-- **harvest_aggregate_time** - Aggregate time entries by client, project, user, date, week, or month
-
-### Utilities
-- **harvest_get_rates** - Get cost and billable rates with fallback support
-- **harvest_resolve_entities** - Fuzzy search for clients, projects, users, tasks by name
-- **harvest_get_schema** - Get schema definitions and enum values (no auth required)
+---
 
 ## Quick Start
 
-### Option 1: Claude Desktop Connectors (Recommended)
+### Claude Desktop (Recommended)
 
-The easiest way to add this MCP server:
+1. Open Claude Desktop → **Settings** → **Connectors**
+2. Click **Add Connector**
+3. Enter: `https://harvest-mcp.southleft.com/mcp`
+4. Click **Connect**
 
-1. Open Claude Desktop
-2. Go to **Settings** → **Connectors**
-3. Click **Add Connector**
-4. Enter the URL: `https://harvest-mcp.southleft.com/mcp`
-5. Click **Connect**
+On first use, you'll receive an OAuth link to connect your Harvest account.
 
-### Option 2: Claude Code CLI
+### Claude Code CLI
 
 ```bash
 claude mcp add --transport http harvest https://harvest-mcp.southleft.com/mcp
 ```
 
-### Option 3: Manual Config File
+### Manual Configuration
 
-Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
@@ -65,15 +38,122 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 }
 ```
 
-Restart Claude Desktop after editing the config file.
+---
 
-### Authentication
+## Example Prompts
 
-On first use, you'll receive an OAuth authorization URL. Click it to connect your Harvest account, then return to Claude.
+### Time Tracking
+
+> "What did I work on today?"
+
+> "Show me all my time entries from last week"
+
+> "How many hours did I log on the Acme project this month?"
+
+> "Start a timer for the Design task on Project X"
+
+> "Stop my running timer"
+
+### Team & Client Analysis
+
+> "Who on my team logged the most hours last month?"
+
+> "Show me all time entries for client Acme Corp"
+
+> "Get the contact information for everyone at Initech"
+
+> "What projects is Sarah working on?"
+
+> "List all active clients"
+
+### Profitability & Utilization
+
+> "What's our profitability on the Acme project this quarter?"
+
+> "Compare profitability across all clients for 2024"
+
+> "What's our team utilization rate this month?"
+
+> "Show me billable vs non-billable breakdown by team member"
+
+> "Which projects are most profitable?"
+
+### Invoicing & Expenses
+
+> "Show me all unpaid invoices"
+
+> "What invoices are open for Acme Corp?"
+
+> "List all expenses for the Johnson project"
+
+> "What's been billed vs unbilled this quarter?"
+
+### Aggregation & Reporting
+
+> "Sum up hours by project for November"
+
+> "Break down time by client and user for Q4"
+
+> "Weekly hours summary for December"
+
+> "Show me time trends by month for 2024"
+
+---
+
+## Available Tools (19)
+
+### Time Tracking
+| Tool | Description |
+|------|-------------|
+| `harvest_list_time_entries` | List and filter time entries by user, client, project, date range |
+| `harvest_get_time_entry` | Get a specific time entry by ID |
+| `harvest_create_time_entry` | Create new time entries with optional timer |
+| `harvest_stop_timer` | Stop a running timer |
+
+### Company & Team
+| Tool | Description |
+|------|-------------|
+| `harvest_get_company` | Get company/account information |
+| `harvest_get_current_user` | Get current user info |
+| `harvest_list_users` | List all users with filters |
+
+### Clients & Contacts
+| Tool | Description |
+|------|-------------|
+| `harvest_list_clients` | List all clients |
+| `harvest_list_contacts` | List client contacts (people associated with clients) |
+
+### Projects & Tasks
+| Tool | Description |
+|------|-------------|
+| `harvest_list_projects` | List all projects with filters |
+| `harvest_list_tasks` | List all tasks |
+
+### Invoicing & Expenses
+| Tool | Description |
+|------|-------------|
+| `harvest_list_invoices` | List invoices with state/date filters |
+| `harvest_list_expenses` | List expenses with filters |
+
+### Analytics & Compute
+| Tool | Description |
+|------|-------------|
+| `harvest_compute_profitability` | Calculate profitability (time-based, invoice-based, or hybrid) |
+| `harvest_compute_utilization` | Calculate utilization with capacity tracking |
+| `harvest_aggregate_time` | Aggregate time by client, project, user, date, week, or month |
+
+### Utilities
+| Tool | Description |
+|------|-------------|
+| `harvest_get_rates` | Get cost and billable rates with fallback support |
+| `harvest_resolve_entities` | Fuzzy search for entities by name |
+| `harvest_get_schema` | Get schema definitions and enum values (no auth required) |
+
+---
 
 ## Self-Hosting
 
-### Option 1: Cloudflare Workers (Recommended)
+### Cloudflare Workers (Recommended)
 
 1. **Clone and install**
    ```bash
@@ -96,7 +176,7 @@ On first use, you'll receive an OAuth authorization URL. Click it to connect you
    npx wrangler kv:namespace create SESSIONS
    npx wrangler kv:namespace create RATES_CONFIG
 
-   # Update wrangler.toml with the KV namespace IDs
+   # Update wrangler.toml with the namespace IDs
 
    # Set secrets
    echo "YOUR_CLIENT_ID" | npx wrangler secret put HARVEST_CLIENT_ID
@@ -109,29 +189,17 @@ On first use, you'll receive an OAuth authorization URL. Click it to connect you
    npm run deploy
    ```
 
-### Option 2: Node.js Server
+### Node.js Server
 
 ```bash
-# Copy environment template
 cp .env.example .env
-
 # Edit .env with your Harvest credentials
 
-# Development
-npm run dev
-
-# Production
-npm run build && npm start
+npm run dev      # Development
+npm run build && npm start  # Production
 ```
 
-## API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Landing page |
-| `/health` | GET | Health check |
-| `/mcp` | POST | MCP protocol endpoint |
-| `/callback` | GET | OAuth callback |
+---
 
 ## Environment Variables
 
@@ -140,9 +208,11 @@ npm run build && npm start
 | `HARVEST_CLIENT_ID` | Harvest OAuth Client ID | Yes |
 | `HARVEST_CLIENT_SECRET` | Harvest OAuth Client Secret | Yes |
 | `SESSION_SECRET` | Secret for session encryption | Yes |
-| `SESSION_TTL_HOURS` | Session lifetime in hours | No (default: 24) |
+| `SESSION_TTL_HOURS` | Session lifetime (default: 24) | No |
 | `ALLOWED_ORIGINS` | CORS allowed origins | No |
 | `DEFAULT_COST_RATE` | Fallback cost rate | No |
+
+---
 
 ## Architecture
 
@@ -160,59 +230,74 @@ npm run build && npm start
 ```
 
 **Stack:**
-- [Hono](https://hono.dev/) - Web framework for Cloudflare Workers
+- [Hono](https://hono.dev/) - Web framework
 - [MCP SDK](https://github.com/modelcontextprotocol/sdk) - Model Context Protocol
 - [Cloudflare KV](https://developers.cloudflare.com/kv/) - Session storage
 - [Harvest API v2](https://help.getharvest.com/api-v2/) - Time tracking API
 
+---
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Landing page |
+| `/health` | GET | Health check |
+| `/mcp` | POST | MCP protocol endpoint |
+| `/callback` | GET | OAuth callback |
+
+---
+
 ## Development
 
 ```bash
-# Install dependencies
-npm install
-
-# Run locally with wrangler
-npm run dev:workers
-
-# Run tests
-npm test
-
-# Lint & format
-npm run lint
-npm run format
+npm install           # Install dependencies
+npm run dev:workers   # Run locally with wrangler
+npm test              # Run tests
+npm run lint          # Lint code
+npm run format        # Format code
 ```
+
+---
 
 ## Project Structure
 
 ```
 src/
-├── workers/              # Cloudflare Workers entry point
-│   ├── index.ts          # Hono app with MCP endpoint
-│   ├── config.ts         # Workers config loader
-│   ├── kv-session-store.ts
-│   └── types.ts
-├── tools/                # MCP tool implementations
-│   ├── time-entries.ts
-│   ├── clients.ts
-│   ├── projects.ts
-│   ├── compute/          # Analytics tools
-│   │   ├── profitability.ts
-│   │   ├── utilization.ts
-│   │   └── aggregation.ts
-│   └── ...
-├── api/                  # Harvest API client
-├── auth/                 # OAuth implementation
-└── session/              # Session management
+├── workers/          # Cloudflare Workers entry point
+│   ├── index.ts      # Hono app with MCP endpoint
+│   ├── config.ts     # Workers config loader
+│   └── kv-session-store.ts
+├── tools/            # MCP tool implementations
+│   └── index.ts      # All tool registrations
+├── harvest/          # Harvest API client
+│   ├── client.ts     # API client with caching
+│   ├── types.ts      # TypeScript types
+│   ├── cache.ts      # LRU cache
+│   └── rate-limiter.ts
+├── compute/          # Analytics engines
+│   ├── profitability.ts
+│   ├── utilization.ts
+│   └── aggregation.ts
+├── auth/             # OAuth implementation
+├── session/          # Session management
+├── rates/            # Rate resolution service
+├── entities/         # Entity resolution (fuzzy search)
+└── schema/           # Schema documentation
 ```
+
+---
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+---
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-## Credits
+---
 
 Built by [Southleft](https://southleft.com)

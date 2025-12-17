@@ -15,6 +15,9 @@ import type {
   UserFilterParams,
   Client,
   ClientsResponse,
+  Contact,
+  ContactsResponse,
+  ContactFilterParams,
   Project,
   ProjectsResponse,
   TimeEntry,
@@ -413,6 +416,18 @@ export class HarvestClient {
 
   async deleteClient(id: number): Promise<void> {
     return this.delete(`/clients/${id}`);
+  }
+
+  // ============================================
+  // Client Contacts
+  // ============================================
+
+  async listContacts(params?: ContactFilterParams): Promise<WithMeta<ContactsResponse>> {
+    return this.get<ContactsResponse>('/contacts', params);
+  }
+
+  async getContact(id: number): Promise<WithMeta<Contact>> {
+    return this.get<Contact>(`/contacts/${id}`);
   }
 
   // ============================================
