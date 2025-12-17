@@ -72,7 +72,7 @@ app.get('/', (c) => {
 
         <h2>Usage</h2>
         <p>Connect using an MCP client (like Claude Desktop) with:</p>
-        <code>https://harvest-mcp.southleft-llc.workers.dev/mcp</code>
+        <code>https://harvest-mcp.southleft.com/mcp</code>
 
         <h2>Tools Available</h2>
         <ul>

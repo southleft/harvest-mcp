@@ -2,7 +2,7 @@
 
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that provides AI assistants with access to the [Harvest](https://www.getharvest.com/) time tracking API.
 
-**Live Server:** https://harvest-mcp.southleft-llc.workers.dev
+**Live Server:** https://harvest-mcp.southleft.com
 
 ## Features
 
@@ -41,13 +41,13 @@ The easiest way to add this MCP server:
 1. Open Claude Desktop
 2. Go to **Settings** → **Connectors**
 3. Click **Add Connector**
-4. Enter the URL: `https://harvest-mcp.southleft-llc.workers.dev/mcp`
+4. Enter the URL: `https://harvest-mcp.southleft.com/mcp`
 5. Click **Connect**
 
 ### Option 2: Claude Code CLI
 
 ```bash
-claude mcp add --transport http harvest https://harvest-mcp.southleft-llc.workers.dev/mcp
+claude mcp add --transport http harvest https://harvest-mcp.southleft.com/mcp
 ```
 
 ### Option 3: Manual Config File
@@ -59,7 +59,7 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
   "mcpServers": {
     "harvest": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "https://harvest-mcp.southleft-llc.workers.dev/mcp"]
+      "args": ["-y", "mcp-remote", "https://harvest-mcp.southleft.com/mcp"]
     }
   }
 }

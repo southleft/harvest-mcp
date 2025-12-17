@@ -1,7 +1,7 @@
 #!/bin/bash
 # Test MCP server endpoints
 
-BASE_URL="https://harvest-mcp.southleft-llc.workers.dev"
+BASE_URL="https://harvest-mcp.southleft.com"
 
 echo "=== Testing MCP Server ==="
 echo ""
