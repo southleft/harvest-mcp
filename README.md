@@ -78,6 +78,16 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 > "Which projects are most profitable?"
 
+### Budget Performance
+
+> "Which employees went over their project budgets this quarter?"
+
+> "Show me top performers who came in under budget"
+
+> "Who are the repeat offenders going over budget on multiple projects?"
+
+> "Compare budget variance by team member for 2024"
+
 ### Invoicing & Expenses
 
 > "Show me all unpaid invoices"
@@ -100,7 +110,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ---
 
-## Available Tools (20)
+## Available Tools (21)
 
 ### Time Tracking
 | Tool | Description |
@@ -142,6 +152,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 | `harvest_compute_profitability` | Calculate profitability (time-based, invoice-based, or hybrid) |
 | `harvest_compute_utilization` | Calculate utilization with capacity tracking |
 | `harvest_aggregate_time` | Aggregate time by client, project, user, date, week, or month |
+| `harvest_compute_budget_performance` | Analyze employee performance based on budget adherence per project |
 
 ### Utilities
 | Tool | Description |

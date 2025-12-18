@@ -12,7 +12,7 @@ import { HarvestClient, HarvestApiError } from '../harvest/client.js';
 import { HarvestOAuth } from '../auth/oauth.js';
 import { RatesService } from '../rates/index.js';
 import { EntityResolver } from '../entities/index.js';
-import { ProfitabilityCalculator, UtilizationCalculator, TimeAggregationCalculator } from '../compute/index.js';
+import { ProfitabilityCalculator, UtilizationCalculator, TimeAggregationCalculator, BudgetPerformanceCalculator } from '../compute/index.js';
 import { getSchema } from '../schema/index.js';
 
 /**
@@ -1045,6 +1045,61 @@ export function registerTools(
           user_id: params.user_id,
           task_id: params.task_id,
           billable_only: params.billable_only,
+        });
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        };
+      } catch (error) {
+        if (error instanceof HarvestApiError) {
+          return {
+            content: [{ type: 'text', text: `Harvest API error: ${error.message}` }],
+            isError: true,
+          };
+        }
+        throw error;
+      }
+    }
+  );
+
+  server.tool(
+    'harvest_compute_budget_performance',
+    'Analyze employee performance based on budget adherence per project. Compares actual hours logged vs user budget allocations, identifies top performers (under budget), and flags repeat offenders (consistently over budget). Use this for performance reviews, capacity planning, and identifying training needs.',
+    {
+      from: z.string().describe('Start date (YYYY-MM-DD)'),
+      to: z.string().describe('End date (YYYY-MM-DD)'),
+      client_id: z.number().optional().describe('Filter by client ID'),
+      project_id: z.number().optional().describe('Filter by project ID'),
+      user_id: z.number().optional().describe('Filter by user ID'),
+      require_person_budget: z.boolean().optional()
+        .describe('Only include projects with per-person budgets (budget_by=person). Default: false'),
+      on_budget_tolerance_percent: z.number().optional()
+        .describe('Tolerance percentage for "on budget" rating (default: 5). E.g., 5 means ±5% is considered on budget'),
+      sort_by: z.enum(['variance_hours', 'variance_percent', 'actual_hours', 'user_name']).optional()
+        .describe('Sort users by: variance_hours (default), variance_percent, actual_hours, or user_name'),
+      sort_order: z.enum(['asc', 'desc']).optional()
+        .describe('Sort order: asc or desc (default: desc for variance metrics, asc for others)'),
+    },
+    async (params) => {
+      const client = await getHarvestClient(session, sessionStore, config);
+      if (!client) {
+        return {
+          content: [{ type: 'text', text: 'Not authenticated. Please authenticate first.' }],
+          isError: true,
+        };
+      }
+
+      try {
+        const calculator = new BudgetPerformanceCalculator(client);
+        const result = await calculator.calculate({
+          date_range: { from: params.from, to: params.to },
+          client_id: params.client_id,
+          project_id: params.project_id,
+          user_id: params.user_id,
+          require_person_budget: params.require_person_budget,
+          on_budget_tolerance_percent: params.on_budget_tolerance_percent,
+          sort_by: params.sort_by,
+          sort_order: params.sort_order,
         });
 
         return {

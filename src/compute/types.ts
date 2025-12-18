@@ -173,3 +173,99 @@ export interface TimeAggregationResponse {
     entries_analyzed: number;
   };
 }
+
+// ============================================
+// BUDGET PERFORMANCE TYPES
+// ============================================
+
+export type PerformanceRating = 'under_budget' | 'on_budget' | 'over_budget';
+export type BudgetPerformanceSortBy = 'variance_hours' | 'variance_percent' | 'actual_hours' | 'user_name';
+export type SortOrder = 'asc' | 'desc';
+
+export interface BudgetPerformanceParams {
+  date_range: DateRange;
+  client_id?: number;
+  project_id?: number;
+  user_id?: number;
+  /** Only include projects with budget_by = 'person' (per-user budgets) */
+  require_person_budget?: boolean;
+  /** Tolerance percentage for "on budget" rating (default: 5) */
+  on_budget_tolerance_percent?: number;
+  /** Sort results by this field */
+  sort_by?: BudgetPerformanceSortBy;
+  /** Sort order (default: asc for variance, desc for hours) */
+  sort_order?: SortOrder;
+}
+
+/** Metrics for a single user-project combination */
+export interface BudgetPerformanceProjectMetrics {
+  project_id: number;
+  project_name: string;
+  client_id: number;
+  client_name: string;
+  budget_hours: number | null;  // null if no budget set
+  actual_hours: number;
+  variance_hours: number;        // actual - budget (positive = over, negative = under)
+  variance_percent: number | null;  // null if no budget
+  rating: PerformanceRating;
+  entry_count: number;
+}
+
+/** Summary metrics across all projects for a user */
+export interface BudgetPerformanceUserMetrics {
+  total_budget_hours: number;
+  total_actual_hours: number;
+  total_variance_hours: number;
+  total_variance_percent: number | null;
+  projects_over_budget: number;
+  projects_under_budget: number;
+  projects_on_budget: number;
+  projects_without_budget: number;
+  overall_rating: PerformanceRating;
+}
+
+/** Complete performance data for a single user */
+export interface BudgetPerformanceUserResult {
+  user_id: number;
+  user_name: string;
+  metrics: BudgetPerformanceUserMetrics;
+  projects: BudgetPerformanceProjectMetrics[];
+}
+
+/** Totals across all users */
+export interface BudgetPerformanceTotals {
+  total_users: number;
+  users_over_budget: number;
+  users_under_budget: number;
+  users_on_budget: number;
+  total_budget_hours: number;
+  total_actual_hours: number;
+  total_variance_hours: number;
+  total_variance_percent: number | null;
+}
+
+export interface BudgetPerformanceResponse {
+  date_range: DateRange;
+  filters: {
+    client_id?: number;
+    project_id?: number;
+    user_id?: number;
+  };
+  settings: {
+    on_budget_tolerance_percent: number;
+    require_person_budget: boolean;
+  };
+  totals: BudgetPerformanceTotals;
+  /** Users sorted by performance (worst performers first by default) */
+  users: BudgetPerformanceUserResult[];
+  /** Top performers (under budget) */
+  top_performers: Array<{ user_id: number; user_name: string; variance_percent: number }>;
+  /** Users consistently over budget */
+  over_budget_repeat_offenders: Array<{ user_id: number; user_name: string; projects_over: number; total_variance_hours: number }>;
+  warnings: string[];
+  _meta: {
+    entries_analyzed: number;
+    projects_analyzed: number;
+    calculation_details: string;
+  };
+}
