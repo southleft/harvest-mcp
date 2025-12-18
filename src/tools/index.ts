@@ -397,6 +397,45 @@ export function registerTools(
     }
   );
 
+  server.tool(
+    'harvest_delete_time_entry',
+    'Delete a time entry. Use this to remove erroneous or unwanted time entries.',
+    {
+      id: z.number().describe('Time entry ID to delete'),
+    },
+    async ({ id }) => {
+      const client = await getHarvestClient(session, sessionStore, config);
+
+      if (!client) {
+        const authUrl = getAuthUrl(session, config);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Authentication required. Please authorize the application:\n\n${authUrl}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      try {
+        await client.deleteTimeEntry(id);
+        return {
+          content: [{ type: 'text', text: `Time entry ${id} has been deleted successfully.` }],
+        };
+      } catch (error) {
+        if (error instanceof HarvestApiError) {
+          return {
+            content: [{ type: 'text', text: `Harvest API error: ${error.message}` }],
+            isError: true,
+          };
+        }
+        throw error;
+      }
+    }
+  );
+
   // ============================================
   // CLIENT TOOLS
   // ============================================
