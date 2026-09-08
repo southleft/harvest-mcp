@@ -31,7 +31,7 @@
     "@modelcontextprotocol/sdk": "^1.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^4.21.0",
+    "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "hono": "^4.11.1",
     "ioredis": "^5.4.0",
